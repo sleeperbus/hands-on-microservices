@@ -13,6 +13,13 @@ public class Product {
         this.serviceAddress = serviceAddress;
     }
 
+    public Product() {
+        productId = 0;
+        name = null;
+        weight = 0;
+        serviceAddress = null;
+    }
+
     public int getProductId() {
         return productId;
     }

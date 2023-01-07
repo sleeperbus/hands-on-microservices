@@ -1,6 +1,11 @@
 package se.magnus.api.core.recommendation;
 
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public class Recommendation {
     private final int productId;
     private final int recommendationId;
