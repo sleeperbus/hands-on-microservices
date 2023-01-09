@@ -1,3 +1,8 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
 server:
   port: 7002
   error:
@@ -7,3 +12,13 @@ logging:
   level:
     root: INFO
     se.magnus: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+server:
+  port: 8080
+
