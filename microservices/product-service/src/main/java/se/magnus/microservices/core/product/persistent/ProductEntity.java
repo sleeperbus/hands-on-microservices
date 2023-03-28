@@ -13,7 +13,7 @@ public class ProductEntity {
     @Version
     private Integer version;
 
-    @Indexed
+    @Indexed(unique = true)
     private int productId;
 
     private String name;
