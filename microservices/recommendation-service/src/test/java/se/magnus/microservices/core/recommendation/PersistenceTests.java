@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import se.magnus.microservices.core.recommendation.persistent.RecommendationEntity;
 import se.magnus.microservices.core.recommendation.persistent.RecommendationRepository;
@@ -18,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
 @ExtendWith(SpringExtension.class)
-@ActiveProfiles("test")
 class PersistenceTests {
     @Autowired
     private RecommendationRepository repository;

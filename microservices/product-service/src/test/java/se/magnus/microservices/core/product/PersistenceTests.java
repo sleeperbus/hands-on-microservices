@@ -10,7 +10,6 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import se.magnus.microservices.core.product.persistent.ProductEntity;
 import se.magnus.microservices.core.product.persistent.ProductRepository;
@@ -24,7 +23,6 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 
 @DataMongoTest()
 @ExtendWith(SpringExtension.class)
-@ActiveProfiles("test")
 class PersistenceTests {
     @Autowired
     private ProductRepository repository;
