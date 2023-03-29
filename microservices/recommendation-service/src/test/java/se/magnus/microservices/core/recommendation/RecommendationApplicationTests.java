@@ -11,7 +11,7 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 class RecommendationApplicationTests {
     @Autowired
     private WebTestClient client;
