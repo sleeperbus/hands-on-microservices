@@ -2,17 +2,17 @@ package se.magnus.api.core.recommendation;
 
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
+@Setter
 @Getter
-@RequiredArgsConstructor
 public class Recommendation {
-    private final int productId;
-    private final int recommendationId;
-    private final String author;
-    private final int rate;
-    private final String content;
-    private final String serviceAddress;
+    private int productId;
+    private int recommendationId;
+    private String author;
+    private int rate;
+    private String content;
+    private String serviceAddress;
 
     public Recommendation() {
         productId = 0;
@@ -21,5 +21,14 @@ public class Recommendation {
         rate = 0;
         content = null;
         serviceAddress = null;
+    }
+
+    public Recommendation(int productId, int recommendationId, String author, int rate, String content, String serviceAddress) {
+        this.productId = productId;
+        this.recommendationId = recommendationId;
+        this.author = author;
+        this.rate = rate;
+        this.content = content;
+        this.serviceAddress = serviceAddress;
     }
 }

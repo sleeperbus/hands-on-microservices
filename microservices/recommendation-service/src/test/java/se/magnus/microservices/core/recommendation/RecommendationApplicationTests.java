@@ -1,56 +1,60 @@
 package se.magnus.microservices.core.recommendation;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import se.magnus.api.core.recommendation.Recommendation;
+import se.magnus.microservices.core.recommendation.persistent.RecommendationRepository;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RecommendationApplicationTests {
     @Autowired
     private WebTestClient client;
 
+    @Autowired
+    private RecommendationRepository repository;
+
+    @BeforeEach
+    public void setupDb() {
+        repository.deleteAll();
+    }
+
     @Test
     public void getRecommendationsByProductId() {
         int productId = 1;
 
-        client.get()
-                .uri("/recommendation?productId=" + productId)
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody()
+        postAndVerifyRecommendation(productId, 1, OK);
+        postAndVerifyRecommendation(productId, 2, OK);
+        postAndVerifyRecommendation(productId, 3, OK);
+
+        assertEquals(3, repository.findByProductId(productId).size());
+
+        getAndVerifyRecommendationsByProductId(productId, OK)
                 .jsonPath("$.length()").isEqualTo(3)
                 .jsonPath("$[0].productId").isEqualTo(productId);
     }
 
+
     @Test
     public void getRecommendationsMissingParameter() {
-        client.get()
-                .uri("/recommendation")
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isEqualTo(BAD_REQUEST)
-                .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody()
+        getAndVerifyRecommendationsByProductId("", BAD_REQUEST)
                 .jsonPath("$.path").isEqualTo("/recommendation")
                 .jsonPath("$.message").isEqualTo("Required query parameter 'productId' is not present.");
     }
 
+
+
     @Test
     public void getRecommendationsInvalidParameter() {
-        client.get()
-                .uri("/recommendation?productId=no-integer")
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isEqualTo(BAD_REQUEST)
-                .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody()
+        getAndVerifyRecommendationsByProductId("?productId=no-integer", BAD_REQUEST)
                 .jsonPath("$.path").isEqualTo("/recommendation")
                 .jsonPath("$.message").isEqualTo("Type mismatch.");
     }
@@ -58,27 +62,87 @@ class RecommendationApplicationTests {
     @Test
     public void getRecommendationsNotFound() {
         int productIdNotFound = 113;
-        client.get()
-                .uri("/recommendation?productId=" + productIdNotFound)
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody()
+        getAndVerifyRecommendationsByProductId(productIdNotFound, OK)
                 .jsonPath("$.length()").isEqualTo(0);
     }
 
     @Test
     public void getRecommendationInvalidParameterNegativeValue() {
         int productNegativeId = -1;
-        client.get()
-                .uri("/recommendation?productId=" + productNegativeId)
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isEqualTo(UNPROCESSABLE_ENTITY)
-                .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody()
+
+        getAndVerifyRecommendationsByProductId(productNegativeId, UNPROCESSABLE_ENTITY)
                 .jsonPath("$.path").isEqualTo("/recommendation")
                 .jsonPath("$.message").isEqualTo("Invalid productId: " + productNegativeId);
+    }
+
+    @Test
+    public void duplicateError() {
+        int productId = 1;
+        int recommendationId = 1;
+
+        postAndVerifyRecommendation(productId, recommendationId, OK)
+                .jsonPath("$.productId").isEqualTo(productId)
+                .jsonPath("$.recommendationId").isEqualTo(recommendationId);
+
+        assertEquals(1, repository.count());
+
+        postAndVerifyRecommendation(productId, recommendationId, UNPROCESSABLE_ENTITY)
+                .jsonPath("$.path").isEqualTo("/recommendation")
+                .jsonPath("$.message").isEqualTo("Duplicate key, Product Id: 1, Recommendation Id: 1");
+    }
+
+    @Test
+    public void deleteRecommendations() {
+        int productId = 1;
+        int recommendationId = 1;
+
+        postAndVerifyRecommendation(productId, recommendationId, OK)
+                .jsonPath("$.productId").isEqualTo(productId)
+                .jsonPath("$.recommendationId").isEqualTo(recommendationId);
+
+        assertEquals(1, repository.count());
+
+        deleteAndVerifyRecommendationsByProductId(productId, OK);
+        assertEquals(0, repository.count());
+
+        deleteAndVerifyRecommendationsByProductId(productId, OK);
+    }
+
+    private WebTestClient.BodyContentSpec deleteAndVerifyRecommendationsByProductId(int productId, HttpStatus httpStatus) {
+        return client.delete()
+                .uri("recommendation?productId=" + productId)
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isEqualTo(httpStatus)
+                .expectBody();
+
+    }
+
+
+    private WebTestClient.BodyContentSpec getAndVerifyRecommendationsByProductId(int productId, HttpStatus httpStatus) {
+        return getAndVerifyRecommendationsByProductId("?productId=" + productId, httpStatus);
+    }
+
+    private WebTestClient.BodyContentSpec getAndVerifyRecommendationsByProductId(String productIdQuery, HttpStatus httpStatus) {
+        return client.get()
+                .uri("/recommendation" + productIdQuery)
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isEqualTo(httpStatus)
+                .expectHeader().contentType(APPLICATION_JSON)
+                .expectBody()
+                ;
+    }
+
+    private WebTestClient.BodyContentSpec postAndVerifyRecommendation(int productId, int recommendationId, HttpStatus httpStatus) {
+        Recommendation recommendation = new Recommendation(productId, recommendationId, "Author" + recommendationId, recommendationId, "c", "sv");
+        return client.post()
+                .uri("/recommendation")
+                .body(just(recommendation), Recommendation.class)
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isEqualTo(httpStatus)
+                .expectHeader().contentType(APPLICATION_JSON)
+                .expectBody();
     }
 }
