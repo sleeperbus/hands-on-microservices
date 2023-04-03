@@ -8,6 +8,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import se.magnus.api.composite.product.ProductAggregate;
+import se.magnus.api.composite.product.RecommendationSummary;
+import se.magnus.api.composite.product.ReviewSummary;
 import se.magnus.api.core.product.Product;
 import se.magnus.api.core.recommendation.Recommendation;
 import se.magnus.api.core.review.Review;
@@ -17,6 +19,7 @@ import se.magnus.util.exceptions.NotFoundException;
 
 import java.util.Collections;
 
+import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.*;
@@ -74,6 +77,32 @@ class ProductCompositeServiceApplicationTests {
     public void createCompositeProduct1() {
         ProductAggregate compositeProduct = new ProductAggregate(1, "name", 1, null, null, null);
         postAndVerifyProduct(compositeProduct, OK);
+    }
+
+    @Test
+    public void createCompositeProduct2() {
+        ProductAggregate compositeProduct = new ProductAggregate(1, "name", 1,
+                singletonList(new RecommendationSummary(1, "a", 1, "c")),
+                singletonList(new ReviewSummary(1, "a", "s", "c")), null);
+        postAndVerifyProduct(compositeProduct, OK);
+    }
+
+    @Test
+    public void deleteCompositeProduct() {
+        ProductAggregate compositeProduct = new ProductAggregate(1, "name", 1,
+                singletonList(new RecommendationSummary(1, "a", 1, "c")),
+                singletonList(new ReviewSummary(1, "a", "s", "c")), null);
+        postAndVerifyProduct(compositeProduct, OK);
+
+        deleteAndVerifyProduct(compositeProduct.getProductId(), OK);
+        deleteAndVerifyProduct(compositeProduct.getProductId(), OK);
+    }
+
+    private WebTestClient.ResponseSpec deleteAndVerifyProduct(int productId, HttpStatus expectedStatus) {
+        return client.delete()
+                .uri("/product-composite/" + productId)
+                .exchange()
+                .expectStatus().isEqualTo(expectedStatus);
     }
 
     private WebTestClient.BodyContentSpec postAndVerifyProduct(ProductAggregate compositeProduct, HttpStatus expectedStatus) {
