@@ -1,39 +1,73 @@
 version: '3.7'
 
 services:
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    deploy:
+      resources:
+        limits:
+          memory: 350m
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpwd
+      - MYSQL_DATABASE=review-db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=pwd
+    deploy:
+      resources:
+        limits:
+          memory: 350m
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uuser", "-ppwd", "-h", "localhost"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
   product:
     build: microservices/product-service
     deploy:
       resources:
         limits:
-          memory: 350
+          memory: 350m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - mongodb
 
   recommendation:
     build: microservices/recommendation-service
     deploy:
       resources:
         limits:
-          memory: 350
+          memory: 350m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - mongodb
 
   review:
     build: microservices/review-service
     deploy:
       resources:
         limits:
-          memory: 350
+          memory: 350m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - mysql
 
   product-composite:
     build: microservices/product-composite-service
     deploy:
       resources:
         limits:
-          memory: 350
+          memory: 350m
     ports:
       - "8080:8080"
     environment:
