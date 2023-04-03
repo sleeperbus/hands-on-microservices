@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import se.magnus.api.composite.product.ProductAggregate;
 import se.magnus.api.core.product.Product;
 import se.magnus.api.core.recommendation.Recommendation;
 import se.magnus.api.core.review.Review;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class ProductCompositeServiceApplicationTests {
@@ -68,12 +70,28 @@ class ProductCompositeServiceApplicationTests {
                 .jsonPath("$.message").isEqualTo("INVALID: " + PRODUCT_ID_INVALID);
     }
 
-    private WebTestClient.BodyContentSpec getAndVerifyProduct(int productId, HttpStatus httpStatus) {
+    @Test
+    public void createCompositeProduct1() {
+        ProductAggregate compositeProduct = new ProductAggregate(1, "name", 1, null, null, null);
+        postAndVerifyProduct(compositeProduct, OK);
+    }
+
+    private WebTestClient.BodyContentSpec postAndVerifyProduct(ProductAggregate compositeProduct, HttpStatus expectedStatus) {
+        return client.post()
+                .uri("/product-composite")
+                .body(just(compositeProduct), ProductAggregate.class)
+                .exchange()
+                .expectStatus().isEqualTo(expectedStatus)
+                .expectBody();
+
+    }
+
+    private WebTestClient.BodyContentSpec getAndVerifyProduct(int productId, HttpStatus expectedStatus) {
         return client.get()
                 .uri("/product-composite/" + productId)
                 .accept(APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isEqualTo(httpStatus)
+                .expectStatus().isEqualTo(expectedStatus)
                 .expectHeader().contentType((APPLICATION_JSON))
                 .expectBody();
     }
