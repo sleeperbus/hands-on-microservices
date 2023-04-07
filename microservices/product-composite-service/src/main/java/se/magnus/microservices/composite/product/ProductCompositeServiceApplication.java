@@ -58,8 +58,8 @@ public class ProductCompositeServiceApplication {
         final Map<String, ReactiveHealthIndicator> registry = new LinkedHashMap<>();
 
         registry.put("product", () -> integration.getProductHealth());
-        registry.put("recommendation", () -> integration.getProductHealth());
-        registry.put("review", () -> integration.getProductHealth());
+        registry.put("recommendation", () -> integration.getRecommendationHealth());
+        registry.put("review", () -> integration.getReviewHealth());
 
         return CompositeReactiveHealthContributor.fromMap(registry);
     }

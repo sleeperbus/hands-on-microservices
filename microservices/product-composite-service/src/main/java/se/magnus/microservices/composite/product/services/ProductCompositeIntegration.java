@@ -67,14 +67,14 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         this.mapper = mapper;
         this.webClient = webClient.build();
         this.streamBridge = streamBridge;
-        this.productServiceUrl = "http://" + productServiceUrl + ":" + productServicePort + "/product";
-        this.recommendationServiceUrl = "http://" + recommendationServiceUrl + ":" + recommendationServicePort + "/recommendation";
-        this.reviewServiceUrl = "http://" + reviewServiceUrl + ":" + reviewServicePort + "/review";
+        this.productServiceUrl = "http://" + productServiceUrl + ":" + productServicePort;
+        this.recommendationServiceUrl = "http://" + recommendationServiceUrl + ":" + recommendationServicePort;
+        this.reviewServiceUrl = "http://" + reviewServiceUrl + ":" + reviewServicePort;
     }
 
     @Override
     public Mono<Product> getProduct(int productId) {
-        String url = productServiceUrl + "/" + productId;
+        String url = productServiceUrl + "/product/" + productId;
         LOG.debug("Will call getProduct API on URL: {}", url);
 
         return webClient.get().uri(url)
@@ -137,7 +137,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Flux<Recommendation> getRecommendation(int productId) {
-        String url = recommendationServiceUrl + "?productId=" + productId;
+        String url = recommendationServiceUrl + "/recommendation?productId=" + productId;
         LOG.debug("will call getRecommendation API on URL: {}", url);
 
         return webClient.get().uri(url)
@@ -163,7 +163,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Flux<Review> getReviews(int productId) {
-        String url = reviewServiceUrl + "?productId=" + productId;
+        String url = reviewServiceUrl + "/review?productId=" + productId;
         LOG.debug("will call getReviews API on URL: {}", url);
 
         return webClient.get().uri(url)
