@@ -25,7 +25,8 @@ spring:
       on-profile: docker
   data:
     mongodb:
-      host: mongodb
+      host: hom-prod-mongodb
+      port: 27017
 
 server:
   port: 8080

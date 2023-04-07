@@ -25,6 +25,9 @@ spring:
   config:
     activate:
       on-profile: docker
+  datasource:
+    url: jdbc:mysql://hom-prod-mysql:3306/review-db
+
 
 server:
   port: 8080
