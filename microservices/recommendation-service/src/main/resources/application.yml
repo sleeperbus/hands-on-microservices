@@ -3,7 +3,8 @@ spring:
     mongodb:
       host: localhost
       port: 27018
-      database: test-recommend-db
+      database: test-mongo-db
+      auto-index-creation: true
 
 server:
   port: 7002
@@ -14,6 +15,7 @@ logging:
   level:
     root: INFO
     se.magnus: DEBUG
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 ---
 
@@ -21,6 +23,9 @@ spring:
   config:
     activate:
       on-profile: docker
+  data:
+    mongodb:
+      host: mongodb
 
 server:
   port: 8080

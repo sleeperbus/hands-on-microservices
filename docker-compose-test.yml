@@ -1,9 +1,28 @@
 version: '3.8'
 
 services:
-  mongodb:
+  hom-mongodb:
     image: mongo
     ports:
       - "27018:27017"
-    volumes:
-      - ./mongo_test_data:/data/db
+#    volumes:
+#      - ./mongo_test_data:/data/db
+    deploy:
+      resources:
+        limits:
+          memory: 350m
+  hom-mysql:
+    image: mysql
+    ports:
+      - "3307:3306"
+#    volumes:
+#      - ./mysql_test_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpwd
+      - MYSQL_DATABASE=test-review-db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=pwd
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 350m

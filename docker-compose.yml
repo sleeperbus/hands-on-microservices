@@ -19,15 +19,15 @@ services:
       - MYSQL_DATABASE=review-db
       - MYSQL_USER=user
       - MYSQL_PASSWORD=pwd
-    deploy:
-      resources:
-        limits:
-          memory: 350m
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-uuser", "-ppwd", "-h", "localhost"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 350m
+#    healthcheck:
+#      test: ["CMD", "mysqladmin", "ping", "-uuser", "-ppwd", "-h", "localhost"]
+#      interval: 10s
+#      timeout: 3s
+#      retries: 10
 
   product:
     build: microservices/product-service
