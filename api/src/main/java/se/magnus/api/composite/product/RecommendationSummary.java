@@ -1,14 +1,19 @@
 package se.magnus.api.composite.product;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
+@NoArgsConstructor
 public class RecommendationSummary {
-    private final int recommendationId;
-    private final String author;
-    private final int rate;
+    private int recommendationId;
+    private String author;
+    private int rate;
 
-    private final String content;
+    private String content;
+
 
     public RecommendationSummary(int recommendationId, String author, int rate, String content) {
         this.recommendationId = recommendationId;
