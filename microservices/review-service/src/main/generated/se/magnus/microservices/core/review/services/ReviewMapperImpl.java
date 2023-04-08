@@ -9,7 +9,7 @@ import se.magnus.microservices.core.review.persistent.ReviewEntity;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-04-02T21:24:27+0900",
+    date = "2023-04-08T21:48:33+0900",
     comments = "version: 1.5.3.Final, compiler: javac, environment: Java 17.0.4 (Amazon.com Inc.)"
 )
 @Component
