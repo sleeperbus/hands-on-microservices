@@ -53,15 +53,15 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             ) {
         this.restTemplate = restTemplate;
         this.mapper = mapper;
-        this.productServiceUrl = "http://" + productServiceUrl + ":" + productServicePort + "/product/";
-        this.recommendationServiceUrl = "http://" + recommendationServiceUrl + ":" + recommendationServicePort + "/recommendation?productId=";
-        this.reviewServiceUrl = "http://" + reviewServiceUrl + ":" + reviewServicePort + "/review?productId=";
+        this.productServiceUrl = "http://" + productServiceUrl + ":" + productServicePort + "/product";
+        this.recommendationServiceUrl = "http://" + recommendationServiceUrl + ":" + recommendationServicePort + "/recommendation";
+        this.reviewServiceUrl = "http://" + reviewServiceUrl + ":" + reviewServicePort + "/review";
     }
 
     @Override
     public Product getProduct(int productId) {
         try {
-            String url = productServiceUrl + productId;
+            String url = productServiceUrl + "/" + productId;
             LOG.debug("Will call getProduct API on URL: {}", url);
 
             Product product = restTemplate.getForObject(url, Product.class);
@@ -119,7 +119,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public List<Recommendation> getRecommendation(int productId) {
         try {
-            String url = recommendationServiceUrl + productId;
+            String url = recommendationServiceUrl + "/?productId=" +productId;
             LOG.debug("will call getRecommendation API on URL: {}", url);
 
             List<Recommendation> recommendations = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Recommendation>>() {
@@ -149,7 +149,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public void deleteRecommendation(int productId) {
         try {
-            String url = recommendationServiceUrl + "/" + productId;
+            String url = recommendationServiceUrl + "/productId=" + productId;
             LOG.debug("Will call the deleteProduct API on URL: {}", url);
             restTemplate.delete(url);
         } catch (HttpClientErrorException e) {
@@ -160,7 +160,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public List<Review> getReviews(int productId) {
         try {
-            String url = reviewServiceUrl + productId;
+            String url = reviewServiceUrl + "/productId=" + productId;
             LOG.debug("will call getReviews API on URL: {}", url);
 
             List<Review> reviews = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {
