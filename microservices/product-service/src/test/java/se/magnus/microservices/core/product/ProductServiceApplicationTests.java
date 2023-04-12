@@ -11,8 +11,7 @@ import org.springframework.test.web.reactive.server.WebTestClient.BodyContentSpe
 import se.magnus.api.core.product.Product;
 import se.magnus.microservices.core.product.persistent.ProductRepository;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -30,7 +29,7 @@ class ProductServiceApplicationTests {
 
     @BeforeEach
     public void setupDb() {
-        repository.deleteAll();
+        repository.deleteAll().block();
     }
 
 
@@ -39,7 +38,7 @@ class ProductServiceApplicationTests {
         int productId = 1;
 
         postAndVerifyProduct(productId, HttpStatus.OK);
-        assertTrue(repository.findByProductId(productId).isPresent());
+        assertNotNull(repository.findByProductId(productId).block());
 
         getAndVerifyProduct(productId, OK)
                 .jsonPath("$.productId").isEqualTo(productId);
@@ -68,7 +67,7 @@ class ProductServiceApplicationTests {
         int productId = 1;
 
         postAndVerifyProduct(productId, OK);
-        assertTrue(repository.findByProductId(productId).isPresent());
+        assertNotNull(repository.findByProductId(productId).block());
 
         postAndVerifyProduct(productId, UNPROCESSABLE_ENTITY)
                 .jsonPath("$.path").isEqualTo("/product")
@@ -80,10 +79,10 @@ class ProductServiceApplicationTests {
         int productId = 1;
 
         postAndVerifyProduct(productId, OK);
-        assertTrue(repository.findByProductId(productId).isPresent());
+        assertNotNull(repository.findByProductId(productId).block());
 
         deleteAndVerifyProduct(productId, OK);
-        assertFalse(repository.findByProductId(productId).isPresent());
+        assertNull(repository.findByProductId(productId).block());
 
         // 멱등성
         deleteAndVerifyProduct(productId, OK);
