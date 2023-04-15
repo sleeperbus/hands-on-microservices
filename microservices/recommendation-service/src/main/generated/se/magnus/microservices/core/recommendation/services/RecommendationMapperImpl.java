@@ -9,8 +9,8 @@ import se.magnus.microservices.core.recommendation.persistent.RecommendationEnti
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-04-13T08:47:45+0900",
-    comments = "version: 1.5.3.Final, compiler: javac, environment: Java 17.0.3 (Amazon.com Inc.)"
+    date = "2023-04-15T11:21:42+0900",
+    comments = "version: 1.5.3.Final, compiler: javac, environment: Java 17.0.4 (Amazon.com Inc.)"
 )
 @Component
 public class RecommendationMapperImpl implements RecommendationMapper {

@@ -44,17 +44,17 @@ class PersistenceTests {
     @Test
     public void create() {
         RecommendationEntity newEntity = new RecommendationEntity(1, 2, "a", 3, "new book");
-        repository.save(newEntity);
+        repository.save(newEntity).block();
 
         RecommendationEntity foundEntity = repository.findById(newEntity.getId()).block();
         assertEqualsRecommendation(newEntity, foundEntity);
-        assertEquals(2, repository.count());
+        assertEquals(2, repository.count().block());
     }
 
     @Test
     public void update() {
         savedEntity.setAuthor("b");
-        repository.save(savedEntity);
+        repository.save(savedEntity).block();
 
         RecommendationEntity foundEntity = repository.findById(savedEntity.getId()).block();
         assertEquals(1, foundEntity.getVersion());

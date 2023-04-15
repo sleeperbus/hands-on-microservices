@@ -24,7 +24,7 @@ class RecommendationApplicationTests {
 
     @BeforeEach
     public void setupDb() {
-        repository.deleteAll();
+        repository.deleteAll().block();
     }
 
     @Test
@@ -35,7 +35,7 @@ class RecommendationApplicationTests {
         postAndVerifyRecommendation(productId, 2, OK);
         postAndVerifyRecommendation(productId, 3, OK);
 
-        assertEquals(3, repository.findByProductId(productId).size());
+        assertEquals(3, repository.findByProductId(productId).count().block());
 
         getAndVerifyRecommendationsByProductId(productId, OK)
                 .jsonPath("$.length()").isEqualTo(3)
@@ -84,7 +84,7 @@ class RecommendationApplicationTests {
                 .jsonPath("$.productId").isEqualTo(productId)
                 .jsonPath("$.recommendationId").isEqualTo(recommendationId);
 
-        assertEquals(1, repository.count());
+        assertEquals(1, repository.count().block());
 
         postAndVerifyRecommendation(productId, recommendationId, UNPROCESSABLE_ENTITY)
                 .jsonPath("$.path").isEqualTo("/recommendation")
@@ -100,10 +100,10 @@ class RecommendationApplicationTests {
                 .jsonPath("$.productId").isEqualTo(productId)
                 .jsonPath("$.recommendationId").isEqualTo(recommendationId);
 
-        assertEquals(1, repository.count());
+        assertEquals(1, repository.count().block());
 
         deleteAndVerifyRecommendationsByProductId(productId, OK);
-        assertEquals(0, repository.count());
+        assertEquals(0, repository.count().block());
 
         deleteAndVerifyRecommendationsByProductId(productId, OK);
     }
