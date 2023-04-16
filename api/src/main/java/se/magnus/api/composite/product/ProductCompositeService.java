@@ -1,10 +1,11 @@
 package se.magnus.api.composite.product;
 
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 public interface ProductCompositeService {
     @GetMapping(value = "/product-composite/{productId}", produces = "application/json")
-    ProductAggregate getProduct(@PathVariable int productId);
+    Mono<ProductAggregate> getCompositeProduct(@PathVariable int productId);
 
     @PostMapping(value = "/product-composite", consumes = "application/json")
     void createCompositeProduct(@RequestBody ProductAggregate body);

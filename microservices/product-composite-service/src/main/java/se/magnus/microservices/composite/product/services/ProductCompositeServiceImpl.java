@@ -3,11 +3,11 @@ package se.magnus.microservices.composite.product.services;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 import se.magnus.api.composite.product.*;
 import se.magnus.api.core.product.Product;
 import se.magnus.api.core.recommendation.Recommendation;
 import se.magnus.api.core.review.Review;
-import se.magnus.util.exceptions.NotFoundException;
 import se.magnus.util.http.ServiceUtil;
 
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProductCompositeServiceImpl implements ProductCompositeService {
     private final ServiceUtil serviceUtil;
-    private ProductCompositeIntegration integration;
+    private final ProductCompositeIntegration integration;
 
     @Autowired
     public ProductCompositeServiceImpl(ServiceUtil serviceUtil, ProductCompositeIntegration integration) {
@@ -27,14 +27,15 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
 
 
     @Override
-    public ProductAggregate getProduct(int productId) {
-        Product product = integration.getProduct(productId);
-        if (product == null) throw new NotFoundException("No product found for productId: " + productId);
-
-        List<Recommendation> recommendation = integration.getRecommendation(productId);
-        List<Review> reviews = integration.getReviews(productId);
-
-        return createProductAggregate(product, recommendation, reviews, serviceUtil.getServiceAddress());
+    public Mono<ProductAggregate> getCompositeProduct(int productId) {
+        return Mono.zip(values ->
+                createProductAggregate((Product) values[0], (List<Recommendation>) values[1],
+                        (List<Review>) values[2], serviceUtil.getServiceAddress()),
+                integration.getProduct(productId),
+                integration.getRecommendation(productId).collectList(),
+                integration.getReviews(productId).collectList())
+                .doOnError(ex -> log.warn("getCompositeProduct failed: {}", ex.toString()))
+                .log();
     }
 
     @Override
