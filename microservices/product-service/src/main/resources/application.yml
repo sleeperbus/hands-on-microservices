@@ -5,6 +5,30 @@ spring:
       port: 27018
       database: test-mongo-db
       auto-index-creation: true
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: products
+          group: productsGroup
+          consumer:
+            max-attempts: 3
+            back-off-initial-interval: 500
+            back-off-max-interval: 1000
+            back-off-multiplier: 2.0
+            partitioned: true
+            instance-index: 0
+      rabbit:
+        bindings:
+          input:
+            consumer:
+              auto-bind-dlq: true
+              republish-to-dlq: true
+      kafka:
+        bindings:
+          input:
+            consumer:
+              enable-dlq: true
 
 server:
   port: 7001

@@ -19,6 +19,17 @@ logging:
     root: INFO
     se.magnus: DEBUG
 
+spring:
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: products
+          producer:
+            partition-key-expression: payload.key
+            partition-count: 2
+
+
 ---
 spring:
   config:
