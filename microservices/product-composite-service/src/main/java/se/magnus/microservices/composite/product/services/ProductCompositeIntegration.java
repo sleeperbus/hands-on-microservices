@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -13,12 +17,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import se.magnus.api.core.product.Product;
 import se.magnus.api.core.product.ProductService;
 import se.magnus.api.core.recommendation.Recommendation;
 import se.magnus.api.core.recommendation.RecommendationService;
 import se.magnus.api.core.review.Review;
 import se.magnus.api.core.review.ReviewService;
+import se.magnus.api.event.Event;
 import se.magnus.util.exceptions.InvalidInputException;
 import se.magnus.util.exceptions.NotFoundException;
 import se.magnus.util.http.HttpErrorInfo;
@@ -28,6 +34,8 @@ import java.io.IOException;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static reactor.core.publisher.Mono.empty;
+import static se.magnus.api.event.Event.Type.CREATE;
+import static se.magnus.api.event.Event.Type.DELETE;
 
 @Component
 public class ProductCompositeIntegration implements ProductService, RecommendationService, ReviewService {
@@ -39,13 +47,15 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     private final String productServiceUrl;
     private final String recommendationServiceUrl;
     private final String reviewServiceUrl;
-
     private final WebClient webClient;
+    private final StreamBridge streamBridge;
+    private final Scheduler publishEventScheduler;
 
     @Autowired
     public ProductCompositeIntegration(
             RestTemplate restTemplate,
             ObjectMapper mapper,
+            @Qualifier("publishEventScheduler") Scheduler publishEventScheduler,
             @Value("${app.product-service.host}") String productServiceUrl,
             @Value("${app.product-service.port}") String productServicePort,
             @Value("${app.recommendation-service.host}") String recommendationServiceUrl,
@@ -53,10 +63,12 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             @Value("${app.review-service.host}") String reviewServiceUrl,
             @Value("${app.review-service.port}") String reviewServicePort,
 
-            WebClient.Builder webClient) {
+            WebClient.Builder webClient, StreamBridge streamBridge) {
+        this.publishEventScheduler = publishEventScheduler;
         this.restTemplate = restTemplate;
         this.mapper = mapper;
         this.webClient = webClient.build();
+        this.streamBridge = streamBridge;
         this.productServiceUrl = "http://" + productServiceUrl + ":" + productServicePort + "/product";
         this.recommendationServiceUrl = "http://" + recommendationServiceUrl + ":" + recommendationServicePort + "/recommendation";
         this.reviewServiceUrl = "http://" + reviewServiceUrl + ":" + reviewServicePort + "/review";
@@ -102,29 +114,18 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Product createProduct(Product body) {
-        try {
-            String url = productServiceUrl;
-            LOG.debug("Will post a new product to URL: {}", url);
-
-            Product product = restTemplate.postForObject(url, body, Product.class);
-            LOG.debug("Created a product with Id: {}", product.getProductId());
-            return product;
-        } catch (HttpClientErrorException e) {
-            throw handleHttpClientException(e);
-        }
+        return Mono.fromCallable(() -> {
+            sendMessage("products-out-0", new Event(CREATE, body.getProductId(), body));
+            return body;
+        }).subscribeOn(publishEventScheduler).block();
     }
 
 
     @Override
     public void deleteProduct(int productId) {
-        try {
-            String url = productServiceUrl + "/" + productId;
-            LOG.debug("Will call the deleteProduct API on URL: {}", url);
-            restTemplate.delete(url);
-
-        } catch (HttpClientErrorException e) {
-            throw handleHttpClientException(e);
-        }
+        Mono.fromRunnable(() -> {
+            sendMessage("products-out-0", new Event(DELETE, productId, null));
+        }).subscribeOn(publishEventScheduler).then();
     }
 
 
@@ -150,27 +151,16 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Recommendation createRecommendation(Recommendation body) {
-        try {
-            String url = recommendationServiceUrl;
-            LOG.debug("Will post a new recommendation to URL: {}", url);
-
-            Recommendation recommendation = restTemplate.postForObject(url, body, Recommendation.class);
-            LOG.debug("Created a recommendation with product Id: {], recommendation Id: {}", recommendation.getProductId(), recommendation.getRecommendationId());
-            return recommendation;
-        } catch (HttpClientErrorException e) {
-            throw handleHttpClientException(e);
-        }
+        return Mono.fromCallable(() -> {
+            sendMessage("recommendations-out-0", new Event(CREATE, body.getProductId(), body));
+            return body;
+        }).subscribeOn(publishEventScheduler).block();
     }
 
     @Override
     public void deleteRecommendation(int productId) {
-        try {
-            String url = recommendationServiceUrl + "?productId=" + productId;
-            LOG.debug("Will call the deleteRecommendation API on URL: {}", url);
-            restTemplate.delete(url);
-        } catch (HttpClientErrorException e) {
-            throw handleHttpClientException(e);
-        }
+        Mono.fromRunnable(() -> sendMessage("recommendations-out-0", new Event(DELETE, productId, null)))
+                .subscribeOn(publishEventScheduler).then();
     }
 
     @Override
@@ -187,21 +177,16 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Review createReview(Review body) {
-        try {
-            String url = reviewServiceUrl;
-            LOG.debug("Will post a new review to URL: {}", url);
-
-            Review review = restTemplate.postForObject(url, body, Review.class);
-            LOG.debug("Created a review with product Id: {}, review Id: {}", review.getProductId(), review.getReviewId());
-            return review;
-        } catch (HttpClientErrorException e) {
-            throw handleHttpClientException(e);
-        }
+        return Mono.fromCallable(() -> {
+            sendMessage("reviews-out-0", new Event(CREATE, body.getProductId(), body));
+            return body;
+        }).subscribeOn(publishEventScheduler).block();
     }
 
     @Override
     public void deleteReviews(int productId) {
-
+        Mono.fromRunnable(() -> sendMessage("reviews-out-0", new Event(DELETE, productId, null)))
+                .subscribeOn(publishEventScheduler).then();
     }
 
     private RuntimeException handleHttpClientException(HttpClientErrorException e) {
@@ -214,5 +199,13 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         LOG.warn("Go a unexpected HTTP error: {}, will rethrow it", e.getStatusCode());
         LOG.warn("Error body: {}", e.getResponseBodyAsString());
         return e;
+    }
+
+    private void sendMessage(String bindingName, Event event) {
+        LOG.debug("Sending a {} message to {}", event.getEventType(), bindingName);
+        Message message = MessageBuilder.withPayload(event)
+                .setHeader("partitionKey", event.getKey())
+                .build();
+        streamBridge.send(bindingName, message);
     }
 }

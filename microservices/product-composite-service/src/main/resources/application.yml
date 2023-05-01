@@ -22,13 +22,30 @@ logging:
 spring:
   cloud:
     stream:
+      default-binder: rabbit
+      default.contentType: application/json
       bindings:
-        output:
+        products-out-0:
           destination: products
           producer:
-            partition-key-expression: payload.key
-            partition-count: 2
-
+            required-groups: auditGroup
+        recommendations-out-0:
+          destination: recommendations
+          producer:
+            required-groups: auditGroup
+        reviews-out-0:
+          destination: reviews
+          producer:
+            required-groups: auditGroup
+      kafka:
+        binder:
+          brokers: 127.0.0.1
+          defaultBrokerPort: 9092
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
 
 ---
 spring:
