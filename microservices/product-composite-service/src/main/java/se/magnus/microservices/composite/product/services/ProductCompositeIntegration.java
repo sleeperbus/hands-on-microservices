@@ -117,7 +117,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         return Mono.fromCallable(() -> {
             sendMessage("products-out-0", new Event(CREATE, body.getProductId(), body));
             return body;
-        }).subscribeOn(publishEventScheduler).block();
+        }).subscribeOn(publishEventScheduler).share().block();
     }
 
 
