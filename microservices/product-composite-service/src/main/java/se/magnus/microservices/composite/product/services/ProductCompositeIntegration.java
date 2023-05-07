@@ -154,7 +154,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         return Mono.fromCallable(() -> {
             sendMessage("recommendations-out-0", new Event(CREATE, body.getProductId(), body));
             return body;
-        }).subscribeOn(publishEventScheduler).block();
+        }).subscribeOn(publishEventScheduler).share().block();
     }
 
     @Override
@@ -180,7 +180,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
         return Mono.fromCallable(() -> {
             sendMessage("reviews-out-0", new Event(CREATE, body.getProductId(), body));
             return body;
-        }).subscribeOn(publishEventScheduler).block();
+        }).subscribeOn(publishEventScheduler).share().block();
     }
 
     @Override
