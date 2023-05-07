@@ -32,6 +32,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.http.HttpStatus.OK;
 import static reactor.core.publisher.Mono.just;
 import static se.magnus.api.event.Event.Type.CREATE;
+import static se.magnus.api.event.Event.Type.DELETE;
 import static se.magnus.microservices.composite.product.IsSameEvent.sameEventExceptCreatedAt;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.main.allow-bean-definition-overriding=true"})
@@ -97,10 +98,39 @@ public class MessagingTests {
         assertThat(reviewMessages.get(0), is(sameEventExceptCreatedAt(expectedReviewEvent)));
     }
 
+    @Test
+    void deleteCompositeProduct() {
+        deleteAndVerifyProduct(1, OK);
+
+        List<String> productMessages = getMessages("products");
+        List<String> recommendationMessages = getMessages("recommendations");
+        List<String> reviewMessages = getMessages("reviews");
+
+
+        assertEquals(1, productMessages.size());
+        Event<Integer, Product> expectedProductEvent = new Event(DELETE, 1, null);
+        assertThat(productMessages.get(0), is(sameEventExceptCreatedAt(expectedProductEvent)));
+
+        assertEquals(1, recommendationMessages.size());
+        Event<Integer, Recommendation> expectedRecommendationEvent = new Event(DELETE, 1, null);
+        assertThat(recommendationMessages.get(0), is(sameEventExceptCreatedAt(expectedRecommendationEvent)));
+
+        assertEquals(1, reviewMessages.size());
+        Event<Integer, Review> expectedReviewEvent = new Event(DELETE, 1, null);
+        assertThat(reviewMessages.get(0), is(sameEventExceptCreatedAt(expectedProductEvent)));
+    }
+
     private void postAndVerifyProduct(ProductAggregate compositeProduct, HttpStatus expectedStatus) {
         client.post()
                 .uri("/product-composite")
                 .body(just(compositeProduct), ProductAggregate.class)
+                .exchange()
+                .expectStatus().isEqualTo(expectedStatus);
+    }
+
+    private void deleteAndVerifyProduct(int productId, HttpStatus expectedStatus) {
+        client.delete()
+                .uri("/product-composite/" + productId)
                 .exchange()
                 .expectStatus().isEqualTo(expectedStatus);
     }

@@ -125,7 +125,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     public void deleteProduct(int productId) {
         Mono.fromRunnable(() -> {
             sendMessage("products-out-0", new Event(DELETE, productId, null));
-        }).subscribeOn(publishEventScheduler).then();
+        }).subscribeOn(publishEventScheduler).share().block();
     }
 
 
@@ -160,7 +160,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public void deleteRecommendation(int productId) {
         Mono.fromRunnable(() -> sendMessage("recommendations-out-0", new Event(DELETE, productId, null)))
-                .subscribeOn(publishEventScheduler).then();
+                .subscribeOn(publishEventScheduler).share().block();
     }
 
     @Override
@@ -186,7 +186,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Override
     public void deleteReviews(int productId) {
         Mono.fromRunnable(() -> sendMessage("reviews-out-0", new Event(DELETE, productId, null)))
-                .subscribeOn(publishEventScheduler).then();
+                .subscribeOn(publishEventScheduler).share().block();
     }
 
     private RuntimeException handleHttpClientException(HttpClientErrorException e) {
