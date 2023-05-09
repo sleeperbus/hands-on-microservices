@@ -32,33 +32,33 @@ public class RecommendationServiceImpl implements RecommendationService {
     public Flux<Recommendation> getRecommendation(int productId) {
         if (productId < 1) throw new InvalidInputException("Invalid productId: " + productId);
 
-        Flux<Recommendation> recommendations = repository.findByProductId(productId)
+        return repository.findByProductId(productId)
                 .log()
                 .map(mapper::entityToApi)
                 .map(r -> {
                     r.setServiceAddress(serviceUtil.getServiceAddress());
                     return r;
                 });
-        return recommendations;
     }
 
     @Override
-    public Recommendation createRecommendation(Recommendation body) {
+    public Mono<Recommendation> createRecommendation(Recommendation body) {
         if (body.getProductId() < 1) throw new InvalidInputException("Invalid productId: " + body.getProductId());
 
         RecommendationEntity entity = mapper.apiToEntity(body);
-        Mono<Recommendation> newEntity = repository.save(entity)
+
+        return repository.save(entity)
                 .log()
                 .onErrorMap(DuplicateKeyException.class,
                         e -> new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Recommendation Id: " + body.getRecommendationId()))
                 .map(mapper::entityToApi);
-
-        return newEntity.share().block();
     }
 
     @Override
-    public void deleteRecommendation(int productId) {
+    public Mono<Void> deleteRecommendation(int productId) {
+        if (productId < 1) throw new InvalidInputException("Invalid productId: " + productId);
+
         LOG.debug("deleteRecommendation: tries to delete recommendations for the product with productId: {}", productId);
-        repository.deleteAll(repository.findByProductId(productId)).share().block();
+        return repository.deleteAll(repository.findByProductId(productId));
     }
 }

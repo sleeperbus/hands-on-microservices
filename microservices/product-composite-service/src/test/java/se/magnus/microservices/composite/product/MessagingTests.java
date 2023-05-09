@@ -29,6 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.OK;
 import static reactor.core.publisher.Mono.just;
 import static se.magnus.api.event.Event.Type.CREATE;
@@ -56,8 +57,8 @@ public class MessagingTests {
     @Test
     void createCompositeProduct1() {
         ProductAggregate composite = new ProductAggregate(1, "name", 1, null, null, null);
-//        postAndVerifyProduct(composite, ACCEPTED);
-        postAndVerifyProduct(composite, OK);
+        postAndVerifyProduct(composite, ACCEPTED);
+//        postAndVerifyProduct(composite, OK);
 
         List<String> productMessages = getMessages("products");
         List<String> recommendationMessages = getMessages("recommendations");
@@ -77,7 +78,7 @@ public class MessagingTests {
                 singletonList(new RecommendationSummary(1, "a", 1, "c")),
                 singletonList(new ReviewSummary(1, "a", "s", "c")), null);
 
-        postAndVerifyProduct(composite, OK);
+        postAndVerifyProduct(composite, ACCEPTED);
 
         List<String> productMessages = getMessages("products");
         List<String> recommendationMessages = getMessages("recommendations");

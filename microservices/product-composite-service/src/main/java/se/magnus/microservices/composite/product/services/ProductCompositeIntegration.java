@@ -41,7 +41,6 @@ import static se.magnus.api.event.Event.Type.DELETE;
 public class ProductCompositeIntegration implements ProductService, RecommendationService, ReviewService {
     private static final Logger LOG = LoggerFactory.getLogger(ProductCompositeIntegration.class);
 
-    private final RestTemplate restTemplate;
     private final ObjectMapper mapper;
 
     private final String productServiceUrl;
@@ -113,19 +112,19 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    public Product createProduct(Product body) {
+    public Mono<Product> createProduct(Product body) {
         return Mono.fromCallable(() -> {
             sendMessage("products-out-0", new Event(CREATE, body.getProductId(), body));
             return body;
-        }).subscribeOn(publishEventScheduler).share().block();
+        }).subscribeOn(publishEventScheduler);
     }
 
 
     @Override
-    public void deleteProduct(int productId) {
-        Mono.fromRunnable(() -> {
+    public Mono<Void> deleteProduct(int productId) {
+        return Mono.fromRunnable(() -> {
             sendMessage("products-out-0", new Event(DELETE, productId, null));
-        }).subscribeOn(publishEventScheduler).share().block();
+        }).subscribeOn(publishEventScheduler).then();
     }
 
 
@@ -150,17 +149,17 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    public Recommendation createRecommendation(Recommendation body) {
+    public Mono<Recommendation> createRecommendation(Recommendation body) {
         return Mono.fromCallable(() -> {
             sendMessage("recommendations-out-0", new Event(CREATE, body.getProductId(), body));
             return body;
-        }).subscribeOn(publishEventScheduler).share().block();
+        }).subscribeOn(publishEventScheduler);
     }
 
     @Override
-    public void deleteRecommendation(int productId) {
-        Mono.fromRunnable(() -> sendMessage("recommendations-out-0", new Event(DELETE, productId, null)))
-                .subscribeOn(publishEventScheduler).share().block();
+    public Mono<Void> deleteRecommendation(int productId) {
+        return Mono.fromRunnable(() -> sendMessage("recommendations-out-0", new Event(DELETE, productId, null)))
+                .subscribeOn(publishEventScheduler).then();
     }
 
     @Override
@@ -176,17 +175,17 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    public Review createReview(Review body) {
+    public Mono<Review> createReview(Review body) {
         return Mono.fromCallable(() -> {
             sendMessage("reviews-out-0", new Event(CREATE, body.getProductId(), body));
             return body;
-        }).subscribeOn(publishEventScheduler).share().block();
+        }).subscribeOn(publishEventScheduler);
     }
 
     @Override
-    public void deleteReviews(int productId) {
-        Mono.fromRunnable(() -> sendMessage("reviews-out-0", new Event(DELETE, productId, null)))
-                .subscribeOn(publishEventScheduler).share().block();
+    public Mono<Void> deleteReviews(int productId) {
+        return Mono.fromRunnable(() -> sendMessage("reviews-out-0", new Event(DELETE, productId, null)))
+                .subscribeOn(publishEventScheduler).then();
     }
 
     private RuntimeException handleHttpClientException(HttpClientErrorException e) {

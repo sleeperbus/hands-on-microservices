@@ -1,5 +1,6 @@
 package se.magnus.api.composite.product;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -8,8 +9,9 @@ public interface ProductCompositeService {
     Mono<ProductAggregate> getCompositeProduct(@PathVariable int productId);
 
     @PostMapping(value = "/product-composite", consumes = "application/json")
-    void createCompositeProduct(@RequestBody ProductAggregate body);
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    Mono<Void> createCompositeProduct(@RequestBody ProductAggregate body);
 
     @DeleteMapping(value = "/product-composite/{productId}")
-    void deleteCompositeProduct(@PathVariable int productId);
+    Mono<Void> deleteCompositeProduct(@PathVariable int productId);
 }
