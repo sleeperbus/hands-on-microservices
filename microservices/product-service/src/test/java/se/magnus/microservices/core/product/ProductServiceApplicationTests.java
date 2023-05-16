@@ -3,13 +3,18 @@ package se.magnus.microservices.core.product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.reactive.server.WebTestClient.BodyContentSpec;
 import se.magnus.api.core.product.Product;
+import se.magnus.api.event.Event;
 import se.magnus.microservices.core.product.persistent.ProductRepository;
+import se.magnus.util.exceptions.InvalidInputException;
+
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -17,6 +22,8 @@ import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import static reactor.core.publisher.Mono.just;
+import static se.magnus.api.event.Event.Type.CREATE;
+import static se.magnus.api.event.Event.Type.DELETE;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ComponentScan("se.magnus")
@@ -26,6 +33,10 @@ class ProductServiceApplicationTests {
 
     @Autowired
     private ProductRepository repository;
+
+    @Autowired
+    @Qualifier("messageProcessor")
+    private Consumer<Event<Integer, Product>> messageProcessor;
 
     @BeforeEach
     public void setupDb() {
@@ -37,8 +48,13 @@ class ProductServiceApplicationTests {
     public void getProductById() {
         int productId = 1;
 
-        postAndVerifyProduct(productId, HttpStatus.OK);
+        assertNull(repository.findByProductId(productId).block());
+        assertEquals(0, repository.count().block());
+
+        sendCreateProductEvent(productId);
+
         assertNotNull(repository.findByProductId(productId).block());
+        assertEquals(1, repository.count().block());
 
         getAndVerifyProduct(productId, OK)
                 .jsonPath("$.productId").isEqualTo(productId);
@@ -66,38 +82,29 @@ class ProductServiceApplicationTests {
     public void duplicateError() {
         int productId = 1;
 
-        postAndVerifyProduct(productId, OK);
+        assertNull(repository.findByProductId(productId).block());
+
+        sendCreateProductEvent(productId);
         assertNotNull(repository.findByProductId(productId).block());
 
-        postAndVerifyProduct(productId, UNPROCESSABLE_ENTITY)
-                .jsonPath("$.path").isEqualTo("/product")
-                .jsonPath("$.message").isEqualTo("Duplicate key, Product Id: " + productId);
+        InvalidInputException thrown = assertThrows(InvalidInputException.class, () -> sendCreateProductEvent(productId), "Expected a InvalidInputException here!");
+        assertEquals("Duplicate key, Product Id: " + productId, thrown.getMessage());
     }
 
     @Test
     public void deleteProduct() {
         int productId = 1;
 
-        postAndVerifyProduct(productId, OK);
+        sendCreateProductEvent(productId);
         assertNotNull(repository.findByProductId(productId).block());
 
-        deleteAndVerifyProduct(productId, OK);
+        sendDeleteProductEvent(productId);
         assertNull(repository.findByProductId(productId).block());
 
         // 멱등성
-        deleteAndVerifyProduct(productId, OK);
+        sendDeleteProductEvent(productId);
     }
 
-    private BodyContentSpec postAndVerifyProduct(int productId, HttpStatus expectedStatus) {
-        Product product = new Product(productId, "Name " + productId, productId, "SA");
-        return client.post()
-                .uri("/product")
-                .body(just(product), Product.class)
-                .exchange()
-                .expectStatus().isEqualTo(expectedStatus)
-                .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody();
-    }
 
     private BodyContentSpec getAndVerifyProduct(int productId, HttpStatus httpStatus) {
         return client.get()
@@ -109,12 +116,15 @@ class ProductServiceApplicationTests {
                 .expectBody();
     }
 
-    private BodyContentSpec deleteAndVerifyProduct(int productId, HttpStatus httpStatus) {
-        return client.delete()
-                .uri("/product/" + productId)
-                .accept(APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isEqualTo(httpStatus)
-                .expectBody();
+
+    private void sendCreateProductEvent(int productId) {
+        Product product = new Product(productId, "Name " + productId, productId, "SA");
+        Event<Integer, Product> event = new Event(CREATE, productId, product);
+        messageProcessor.accept(event);
+    }
+
+    private void sendDeleteProductEvent(int productId) {
+        Event<Integer, Product> event = new Event(DELETE, productId, null);
+        messageProcessor.accept(event);
     }
 }
