@@ -52,7 +52,6 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Autowired
     public ProductCompositeIntegration(
-            RestTemplate restTemplate,
             ObjectMapper mapper,
             @Qualifier("publishEventScheduler") Scheduler publishEventScheduler,
             @Value("${app.product-service.host}") String productServiceUrl,
@@ -64,7 +63,6 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
             WebClient.Builder webClient, StreamBridge streamBridge) {
         this.publishEventScheduler = publishEventScheduler;
-        this.restTemplate = restTemplate;
         this.mapper = mapper;
         this.webClient = webClient.build();
         this.streamBridge = streamBridge;
