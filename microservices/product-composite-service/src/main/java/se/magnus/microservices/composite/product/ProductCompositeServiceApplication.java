@@ -4,12 +4,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.health.CompositeReactiveHealthContributor;
+import org.springframework.boot.actuate.health.ReactiveHealthContributor;
+import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import se.magnus.microservices.composite.product.services.ProductCompositeIntegration;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @SpringBootApplication
 @ComponentScan("se.magnus")
@@ -42,4 +49,17 @@ public class ProductCompositeServiceApplication {
         return Schedulers.newBoundedElastic(threadPoolSize, taskQueueSize, "publish-pool");
     }
 
+    @Autowired
+    ProductCompositeIntegration integration;
+
+    @Bean
+    ReactiveHealthContributor coreServices() {
+        final Map<String, ReactiveHealthIndicator> registry = new LinkedHashMap<>();
+
+        registry.put("product", () -> integration.getProductHealth());
+        registry.put("recommendation", () -> integration.getProductHealth());
+        registry.put("review", () -> integration.getProductHealth());
+
+        return CompositeReactiveHealthContributor.fromMap(registry);
+    }
 }
