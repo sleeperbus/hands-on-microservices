@@ -10,6 +10,7 @@ import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -38,10 +39,10 @@ public class ProductCompositeServiceApplication {
         SpringApplication.run(ProductCompositeServiceApplication.class, args);
     }
 
-    @Bean
-    RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+//    @Bean
+//    RestTemplate restTemplate() {
+//        return new RestTemplate();
+//    }
 
     @Bean
     public Scheduler publishEventScheduler() {
@@ -49,7 +50,7 @@ public class ProductCompositeServiceApplication {
         return Schedulers.newBoundedElastic(threadPoolSize, taskQueueSize, "publish-pool");
     }
 
-    @Autowired
+    @Autowired @Lazy
     ProductCompositeIntegration integration;
 
     @Bean

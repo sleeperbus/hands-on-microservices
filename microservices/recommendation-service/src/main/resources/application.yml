@@ -25,8 +25,16 @@ spring:
       on-profile: docker
   data:
     mongodb:
-      host: hom-prod-mongodb
+      host: mongodb
       port: 27017
+  rabbitmq:
+    host: rabbitmq
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka
+      default-binder: rabbit
 
 server:
   port: 8080

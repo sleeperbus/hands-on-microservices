@@ -58,7 +58,6 @@ public class MessagingTests {
     void createCompositeProduct1() {
         ProductAggregate composite = new ProductAggregate(1, "name", 1, null, null, null);
         postAndVerifyProduct(composite, ACCEPTED);
-//        postAndVerifyProduct(composite, OK);
 
         List<String> productMessages = getMessages("products");
         List<String> recommendationMessages = getMessages("recommendations");

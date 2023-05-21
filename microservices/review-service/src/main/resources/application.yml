@@ -26,7 +26,15 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:mysql://hom-prod-mysql:3306/review-db
+    url: jdbc:mysql://mysql:3306/review-db
+  rabbitmq:
+    host: rabbitmq
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka
+      default-binder: rabbit
 
 
 server:

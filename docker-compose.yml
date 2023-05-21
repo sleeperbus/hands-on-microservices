@@ -1,16 +1,22 @@
 version: '3.7'
 
 services:
-  hom-prod-mongodb:
-    image: mongo
+  mongodb:
+    image: mongo:4.4.2
     ports:
       - "27017:27017"
     deploy:
       resources:
         limits:
-          memory: 350m
+          memory: 512m
+    command: mongod
+    healthcheck:
+      test: "mongo --eval 'db.stats().ok'"
+      interval: 5s
+      timeout: 2s
+      retries: 60
 
-  hom-prod-mysql:
+  mysql:
     image: mysql
     ports:
       - "3306:3306"
@@ -19,6 +25,26 @@ services:
       - MYSQL_DATABASE=review-db
       - MYSQL_USER=user
       - MYSQL_PASSWORD=pwd
+    healthcheck:
+      test: "/usr/bin/mysql --user=user --password=pwd --execute \"SHOW DATABASES;\""
+      interval: 5s
+      timeout: 2s
+      retries: 60
+
+  rabbitmq:
+    image: rabbitmq:3.8.11-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 2s
+      retries: 60
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   product:
     build: microservices/product-service
@@ -29,7 +55,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - hom-prod-mongodb
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 
   recommendation:
     build: microservices/recommendation-service
@@ -40,7 +70,10 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - hom-prod-mongodb
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   review:
     build: microservices/review-service
@@ -51,7 +84,10 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - hom-prod-mysql
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   product-composite:
     build: microservices/product-composite-service
