@@ -13,5 +13,6 @@ public interface ProductCompositeService {
     Mono<Void> createCompositeProduct(@RequestBody ProductAggregate body);
 
     @DeleteMapping(value = "/product-composite/{productId}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
     Mono<Void> deleteCompositeProduct(@PathVariable int productId);
 }
