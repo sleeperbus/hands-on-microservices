@@ -99,3 +99,13 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+
+  eureka:
+    build: spring-cloud/eurekaserver
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    ports:
+      - "8761:8761"
+
