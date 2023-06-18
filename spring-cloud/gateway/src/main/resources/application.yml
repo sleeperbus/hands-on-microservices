@@ -72,6 +72,7 @@ spring.cloud.gateway.routes:
 
 management.endpoint.health.show-details: "ALWAYS"
 management.endpoints.web.exposure.include: "*"
+management.endpoint.gateway.enabled: true
 
 logging:
   level:
