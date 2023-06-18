@@ -10,13 +10,9 @@ eureka:
       defaultZone: http://${app.eureka-server}:8761/eureka/
     initialInstanceInfoReplicationIntervalSeconds: 5
     registryFetchIntervalSeconds: 5
-    fetch-registry: false
-    register-with-eureka: false
   instance:
     leaseRenewalIntervalInSeconds: 5
     leaseExpirationDurationInSeconds: 5
-#    prefer-ip-address: true
-#    hostname: localhost
 
 spring.cloud.gateway.routes:
 
