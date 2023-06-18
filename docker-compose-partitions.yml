@@ -119,9 +119,7 @@ services:
   eureka:
     build: spring-cloud/eurekaserver
     mem_limit: 512m
-    ports:
-      - "8761:8761"
-      -
+
   gateway:
     build: spring-cloud/gateway
     mem_limit: 512m

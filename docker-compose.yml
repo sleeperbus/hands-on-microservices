@@ -104,8 +104,6 @@ services:
       resources:
         limits:
           memory: 512m
-    ports:
-      - "8761:8761"
 
   gateway:
     build: spring-cloud/gateway
