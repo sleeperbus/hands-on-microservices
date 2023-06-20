@@ -35,6 +35,7 @@ public class HealthCheckConfiguration {
         registry.put("recommendation", () -> getHealth("http://recommendation:8080"));
         registry.put("review", () -> getHealth("http://review:8080"));
         registry.put("product-composite", () -> getHealth("http://product-composite:8080"));
+        registry.put("auth-server", () -> getHealth("http://auth-server"));
 
         return CompositeReactiveHealthContributor.fromMap(registry);
     }
