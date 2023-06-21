@@ -21,6 +21,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -33,6 +34,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * @author Joe Grandja
  * @since 0.1.0
  */
+@Configuration
 @EnableWebSecurity
 public class DefaultSecurityConfig {
 
@@ -43,6 +45,8 @@ public class DefaultSecurityConfig {
   SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
     http
       .authorizeRequests(authorizeRequests -> authorizeRequests
+//                      .requestMatchers("/actuator/**").permitAll()
+//                      .anyRequest().authenticated()
         .antMatchers("/actuator/**").permitAll()
         .anyRequest().authenticated()
       )

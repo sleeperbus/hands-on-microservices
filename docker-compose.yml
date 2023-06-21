@@ -97,6 +97,11 @@ services:
           memory: 350m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      auth-server:
+        condition: service_healthy
 
   eureka:
     build: spring-cloud/eurekaserver

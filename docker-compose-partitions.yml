@@ -75,6 +75,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      auth-server:
+        condition: service_healthy
 
   mongodb:
     image: mongo:4.4.2

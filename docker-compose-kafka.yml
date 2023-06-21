@@ -75,6 +75,8 @@ services:
     depends_on:
       kafka:
         condition: service_started
+      auth-server:
+        condition: service_healthy
 
   mongodb:
     image: mongo:4.4.2
