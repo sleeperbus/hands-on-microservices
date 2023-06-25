@@ -3,6 +3,7 @@ server.port: 8443
 spring.main.web-application-type: reactive
 
 spring.application.name: gateway
+
 server.ssl:
   key-store-type: PKCS12
   key-store: classpath:keystore/edge.p12
@@ -100,9 +101,9 @@ spring.cloud.gateway.routes:
       - SetPath=/501
 
 spring.security.oauth2.resourceserver.jwt.issuer-uri: http://${app.auth-server}:9999
+
 management.endpoint.health.show-details: "ALWAYS"
 management.endpoints.web.exposure.include: "*"
-management.endpoint.gateway.enabled: true
 
 logging:
   level:
@@ -117,4 +118,3 @@ spring.config.activate.on-profile: docker
 app:
   eureka-server: eureka
   auth-server: auth-server
-
